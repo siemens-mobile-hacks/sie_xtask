@@ -43,31 +43,31 @@ typedef struct {
 } JAVAINTERFACE_CSM;
 #endif
 
+extern char CFG_BM1FILE[128];
+extern char CFG_BM2FILE[128];
+extern char CFG_BM3FILE[128];
+extern char CFG_BM4FILE[128];
+extern char CFG_BM5FILE[128];
+extern char CFG_BM6FILE[128];
+extern char CFG_BM7FILE[128];
+extern char CFG_BM8FILE[128];
+extern char CFG_BM9FILE[128];
 extern int CFG_SHOW_IDLESCREEN;
-extern char CFG_BM1NAME[32], CFG_BM1FILE[128];
-extern char CFG_BM2NAME[32], CFG_BM2FILE[128];
-extern char CFG_BM3NAME[32], CFG_BM3FILE[128];
-extern char CFG_BM4NAME[32], CFG_BM4FILE[128];
-extern char CFG_BM5NAME[32], CFG_BM5FILE[128];
-extern char CFG_BM6NAME[32], CFG_BM6FILE[128];
-extern char CFG_BM7NAME[32], CFG_BM7FILE[128];
-extern char CFG_BM8NAME[32], CFG_BM8FILE[128];
-extern char CFG_BM9NAME[32], CFG_BM9FILE[128];
 
 extern char *CONFIG_PATH;
 extern CSM_RAM *CSM_UNDER_IDLE;
 extern char CFG_CSMLIST_PATH[128];
 
+RECT canvas;
+const CSM_DESC maincsm;
+const int minus11 = -11;
+
 int CSM_ID;
 int SHOW_DAEMONS;
 char CSM_TEXT[32768];
-const CSM_DESC maincsm;
 char MMENU_HDR_TEXT[32];
 NAMELIST * volatile nltop;
 int NSD_COUNT, REALD_COUNT;
-
-RECT canvas;
-const int minus11 = -11;
 
 inline int toupper(int c) {
     if ((c >= 'a') && (c <= 'z')) c += 'A' - 'a';
