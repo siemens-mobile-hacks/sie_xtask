@@ -1,4 +1,5 @@
 #include <swilib.h>
+#include <stdlib.h>
 #include <xtask_ipc.h>
 #include "swaper.h"
 #include "keyhook.h"
@@ -28,8 +29,6 @@ CSM_RAM *CSM_UNDER_IDLE;
 volatile int SHOW_LOCK;
 volatile int CALLHIDE_MODE=0;
 const char IPC_NAME[] = IPC_XTASK_NAME;
-
-extern unsigned long strtoul (const char *nptr,char **endptr,int base);
 
 CSM_RAM *GetUnderIdleCSM(void) {
     CSM_RAM *u;
