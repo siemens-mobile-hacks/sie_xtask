@@ -1,11 +1,19 @@
 #include <swilib.h>
 #include <stdlib.h>
+#include <sie/sie.h>
 #include "conf_loader.h"
 #include "rect_patcher.h"
 #include "swaper.h"
 
 typedef struct {
+    GUI gui;
+    SIE_GUI_SURFACE *surface;
+    SIE_MENU_LIST *menu;
+} MAIN_GUI;
+
+typedef struct {
     CSM_RAM csm;
+    MAIN_GUI *main_gui;
     int gui_id;
 } MAIN_CSM;
 
@@ -58,6 +66,7 @@ char MMENU_HDR_TEXT[32];
 NAMELIST * volatile nltop;
 int NSD_COUNT, REALD_COUNT;
 
+RECT canvas;
 const int minus11 = -11;
 
 inline int toupper(int c) {
@@ -244,7 +253,7 @@ int GetNumberOfDialogs(void) {
     return count;
 }
 
-NAMELIST *get_nlitem(int curitem) {
+NAMELIST *GetNLItem(int curitem) {
     NAMELIST *nl;
     nl = nltop;
     int i = 0;
@@ -256,57 +265,74 @@ NAMELIST *get_nlitem(int curitem) {
     return nl;
 }
 
+SIE_MENU_LIST_ITEM *InitMenuItems(unsigned int *count) {
+    NAMELIST *nl = nltop;
+    SIE_MENU_LIST_ITEM *items = NULL;
+    static char color_daemons[] = SIE_COLOR_TEXT_ERROR;
 
-void mm_menu_iconhndl(void *data, int curitem, void *unk) {
-    NAMELIST *nl;
-    WSHDR *ws;
-    void *item = AllocMenuItem(data);
-    nl = get_nlitem(curitem);
-    if (nl) {
+    unsigned int i = 0;
+    while (nl) {
         if (nl->name) {
-            ws = AllocMenuWS(data, nl->name->wsbody[0] + 2);
-            wstrcpy(ws, nl->name);
+            SIE_MENU_LIST_ITEM *item;
+            items = realloc(items, sizeof(SIE_MENU_LIST_ITEM) * (i + 1));
+            item = &(items[i]);
+            zeromem(item, sizeof(SIE_MENU_LIST_ITEM));
+
+            size_t len = wstrlen(nl->name);
+            item->ws = AllocWS((int)len);
+            wstrcpy(item->ws, nl->name);
             if (nl->is_daemon) {
-                wsInsertChar(ws, 0x0002, 1);
-                wsInsertChar(ws, 0xE008, 1);
+                item->color = color_daemons;
             }
+            i++;
         } else {
-            ws = AllocMenuWS(data, 16);
-            wsprintf(ws, "no name???");
-        }
-    } else {
-        ws = AllocMenuWS(data, 16);
-        wsprintf(ws, "error!!!");
+//            item->ws = AllocWS(16);
+//            wsprintf(item->ws, "no name???");
+        };
+        nl = nl->next;
     }
-    SetMenuItemText(data, item, ws, curitem);
+    *count = i;
+    return items;
 }
 
-const char *GetBookmarkName(int bm) {
-    switch (bm) {
-        case 0:
-            return CFG_BM1NAME;
-        case 1:
-            return CFG_BM2NAME;
-        case 2:
-            return CFG_BM3NAME;
-        case 3:
-            return CFG_BM4NAME;
-        case 4:
-            return CFG_BM5NAME;
-        case 5:
-            return CFG_BM6NAME;
-        case 6:
-            return CFG_BM7NAME;
-        case 7:
-            return CFG_BM8NAME;
-        case 8:
-            return CFG_BM9NAME;
-    }
-    return NULL;
+static void RefreshMenu(MAIN_GUI *data) {
+    unsigned int row = (data->menu) ? data->menu->row : 0;
+    Sie_Menu_List_Destroy(data->menu);
+    GetNumberOfDialogs();
+    data->menu = Sie_Menu_List_Init(data->surface->gui_id);
+    data->menu->items = InitMenuItems(&(data->menu->n_items));
+    Sie_Menu_List_SetRow(data->menu, row);
+    Sie_GUI_Surface_SetHeader(data->surface, MMENU_HDR_TEXT);
 }
 
-const char *GetBookmarkFile(int bm) {
-    switch (bm) {
+static void OnRedraw(MAIN_GUI *data) {
+    Sie_GUI_Surface_Draw(data->surface);
+    Sie_Menu_List_Draw(data->menu);
+}
+
+static void OnCreate(MAIN_GUI *data, void *(*malloc_adr)(int)) {
+    data->gui.state = 1;
+    RefreshMenu(data);
+}
+
+
+static void OnClose(MAIN_GUI *data, void (*mfree_adr)(void *)) {
+    data->gui.state = 0;
+}
+
+static void OnFocus(MAIN_GUI *data, void *(*malloc_adr)(int), void (*mfree_adr)(void *)) {
+    data->gui.state = 2;
+    Sie_GUI_Surface_OnFocus(data->surface);
+}
+
+static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
+    if (data->gui.state != 2) return;
+    Sie_GUI_Surface_OnUnFocus(data->surface);
+    data->gui.state = 1;
+}
+
+const char *GetExec(int id) {
+    switch (id) {
         case 0:
             return CFG_BM1FILE;
         case 1:
@@ -329,234 +355,111 @@ const char *GetBookmarkFile(int bm) {
     return NULL;
 }
 
-int RunBM(int bm) {
-    const char *s = GetBookmarkFile(bm);
-    if (s) {
-        if (strlen(s)) {
-            WSHDR *ws;
-            ws = AllocWS(150);
-            str_2ws(ws, s, 128);
-            ExecuteFile(ws, 0, 0);
-            FreeWS(ws);
-            return 1;
+static int _OnKey(MAIN_GUI *data, GUI_MSG *msg) {
+    Sie_Menu_List_OnKey(data->menu, msg);
+    if (msg->gbsmsg->msg == KEY_DOWN || msg->gbsmsg->msg == LONG_PRESS) {
+        NAMELIST *nl;
+        if (msg->gbsmsg->submess >= '1' && msg->gbsmsg->submess <= '9') {
+            const char *bookmark = GetExec((msg->gbsmsg->submess - '0') - 1);
+            return Sie_Exec_Execute(bookmark) ? 1 : 0;
         }
-    }
-    return 0;
-}
-
-const HEADER_DESC bm_menuhdr = {{0, 0, 131, 21}, NULL,
-                                (int)"Bookmarks...", LGP_NULL};
-const int menusoftkeys[] = {0, 1, 2};
-const SOFTKEY_DESC menu_sk[] = {
-    {0x0018, 0x0000, (int)"Config"},
-    {0x0001, 0x0000, (int)"Close"},
-    {0x003D, 0x0000, (int)LGP_DOIT_PIC}
-};
-
-const SOFTKEYSTAB menu_skt =
-        {
-                menu_sk, 0
-        };
-
-void bm_menu_ghook(void *data, int cmd) {
-    if (cmd == 0x0A) DisableIDLETMR();
-}
-
-int bm_menu_onkey(void *data, GUI_MSG *msg);
-
-void bm_menu_iconhndl(void *data, int curitem, void *unk);
-
-const MENU_DESC bm_menu =
-        {
-                8, bm_menu_onkey, bm_menu_ghook, NULL,
-                menusoftkeys,
-                &menu_skt,
-                0x10,//0x11,
-                bm_menu_iconhndl,
-                NULL,   //Items
-                NULL,   //Procs
-                0   //n
-        };
-
-int bm_menu_onkey(void *data, GUI_MSG *msg) {
-    int i;
-    i = GetCurMenuItem(data);
-    if (msg->keys == 0x18) {
-        //    GeneralFunc_F1(1);
-//    ShowMSG(1,(int)"Under construction!");
-        WSHDR *ws;
-        ws = AllocWS(150);
-        str_2ws(ws, CONFIG_PATH, 128);
-        ExecuteFile(ws, 0, 0);
-        FreeWS(ws);
-        GeneralFunc_flag1(((MAIN_CSM *)FindCSMbyID(CSM_ID))->gui_id, 1);
-        return (1);
-    }
-    if (msg->keys == 0x3D) {
-        if (RunBM(i)) {
-            GeneralFunc_flag1(((MAIN_CSM *)FindCSMbyID(CSM_ID))->gui_id, 1);
-            return (1);
-        }
-        return (-1);
-    }
-    return (0);
-}
-
-
-void bm_menu_iconhndl(void *data, int curitem, void *unk) {
-    const char *s;
-    WSHDR *ws;
-    int l;
-    void *item = AllocMenuItem(data);
-
-    s = GetBookmarkName(curitem);
-    if (s) {
-        if ((l = strlen(s))) {
-            ws = AllocMenuWS(data, l);
-            wsprintf(ws, "%t", s);
-        } else {
-            s = GetBookmarkFile(curitem);
-            if (s) {
-                if (strlen(s)) {
-                    char *p = strrchr(s, '\\');
-                    if (p) {
-                        unsigned int pos;
-                        ws = AllocWS((l = strlen(p + 1)));
-                        str_2ws(ws, p + 1, l);
-                        if ((pos = wstrrchr(ws, ws->wsbody[0], '.')) != 0xFFFF) {
-                            CutWSTR(ws, pos - 1);
-                        }
-                    } else goto L_EMPTY;
-                } else goto L_EMPTY;
-            } else {
-                L_EMPTY:
-                ws = AllocMenuWS(data, 10);
-                wsprintf(ws, "Empty");
-            }
-        }
-    } else {
-        ws = AllocMenuWS(data, 10);
-        wsprintf(ws, "error");
-    }
-    SetMenuItemText(data, item, ws, curitem);
-}
-
-void ShowBMmenu(void) {
-    patch_header(&bm_menuhdr);
-    CreateMenu(0, 0, &bm_menu, &bm_menuhdr, 0, 9, 0, 0);
-}
-
-int mm_menu_onkey(void *data, GUI_MSG *msg) {
-//  MAIN_CSM *csm=MenuGetUserPointer(data);
-    NAMELIST *nl = get_nlitem(GetCurMenuItem(data));
-    int i;
-    if (msg->gbsmsg->msg == KEY_DOWN) {
-        i = msg->gbsmsg->submess;
-        {
-            if (i == '0') {
-                ShowBMmenu();
-                return (-1);
-            }
-            if ((i >= '1') && (i <= '9')) {
-                if (RunBM(i - '1')) return 1;
-                return (-1);
-            }
-        }
-        switch (i) {
-            case LEFT_BUTTON:
-                if (REALD_COUNT + NSD_COUNT > 0) {
-                    i = ((CSM_RAM*)(nl->p))->id;
-                    if (i != CSM_root()->idle_id) CloseCSM(i);
-                }
-                return -1;
-            case '#':
-                if (REALD_COUNT + NSD_COUNT > 0) {
-                    i = ((CSM_RAM*)(nl->p))->id;
-                    if (i != CSM_root()->idle_id) CloseCSM(i);
-                }
-                return 0;
-            case '*':
-                SHOW_DAEMONS = !SHOW_DAEMONS;
-                RefreshGUI();
-                return 0;
-            case LEFT_SOFT:
-                CSMtoTop(CSM_root()->idle_id, -1);
-                return 1;
-            case ENTER_BUTTON:
+        switch (msg->gbsmsg->submess) {
+            case SIE_MENU_LIST_KEY_PREV:
+            case SIE_MENU_LIST_KEY_NEXT:
+                Sie_GUI_Surface_Draw(data->surface);
+                break;
+            case SIE_MENU_LIST_KEY_ENTER:
+                nl = GetNLItem((int)(data->menu->row));
                 if (!nl->is_daemon) {
                     CSMtoTop(((CSM_RAM *)(nl->p))->id, -1);
                 }
-                return (1);
+                return 1;
+            case LEFT_SOFT:
+                CSMtoTop(CSM_root()->idle_id, -1);
+                return 1;
             case RIGHT_SOFT:
                 return 1;
+            case '*':
+                SHOW_DAEMONS = !SHOW_DAEMONS;
+                RefreshMenu(data);
+                DirectRedrawGUI();
+                break;
+            case '#':
+                nl = GetNLItem((int)(data->menu->row));
+                if (REALD_COUNT + NSD_COUNT > 0) {
+                    int i = ((CSM_RAM*)(nl->p))->id;
+                    if (i != CSM_root()->idle_id) {
+                        CloseCSM(i);
+                    }
+                }
+                break;
         }
     }
     return 0;
 }
 
-const HEADER_DESC mm_menuhdr = {{0, 0, 131, 21}, NULL,
-                                (int)MMENU_HDR_TEXT, LGP_NULL};
-const SOFTKEY_DESC mm_menu_sk[] = {
-    {0x0018, 0x0000, (int)"Idle"},
-    {0x0001, 0x0000, (int)"Back"},
-    {0x003D, 0x0000, (int)LGP_DOIT_PIC}
-};
-
-const SOFTKEYSTAB mm_menu_skt = {
-    mm_menu_sk, 0
-};
-
-void mm_menu_ghook(void *data, int cmd) {
-    int i, j;
-    if (cmd == 9) {
-        ClearNL();
-    }
-    if (cmd == 0x0A) {
-        DisableIDLETMR();
-        i = GetCurMenuItem(data);
-        Menu_SetItemCountDyn(data, j = GetNumberOfDialogs());
-        if (i >= j) SetCursorToMenuItem(data, j - 1);
-    }
+static int OnKey(MAIN_GUI *data, GUI_MSG *msg) {
+    return Sie_GUI_Surface_OnKey(data->surface, data, msg);
 }
 
-const MENU_DESC mm_menu = {
-    8, mm_menu_onkey, mm_menu_ghook, NULL,
-    menusoftkeys,
-    &mm_menu_skt,
-    0x10,//0x11,
-    mm_menu_iconhndl,
-    NULL,   //Items
-    NULL,   //Procs
-    0   //n
+
+extern void kill_data(void *p, void (*func_p)(void *));
+
+static int method8(void) { return 0; }
+
+static int method9(void) { return 0; }
+
+const void *const gui_methods[11] = {
+        (void*)OnRedraw,
+        (void*)OnCreate,
+        (void*)OnClose,
+        (void*)OnFocus,
+        (void*)OnUnFocus,
+        (void*)OnKey,
+        0,
+        (void*)kill_data,
+        (void*)method8,
+        (void*)method9,
+        0
 };
 
+void LoadCSMList() {
+    size_t size = 0;
+    unsigned int err = 0;
+    int fp = _open(CFG_CSMLIST_PATH, A_ReadOnly + A_BIN, P_READ, &err);
+    if (fp != -1) {
+        size = _read(fp, CSM_TEXT, 32767, &err);
+        _close(fp, &err);
+    }
+    if (size >= 0) CSM_TEXT[size] = 0;
+}
+
 void maincsm_oncreate(CSM_RAM *data) {
-    MAIN_CSM *csm = (MAIN_CSM *)data;
+    MAIN_CSM *csm = (MAIN_CSM*)data;
+    const SIE_GUI_SURFACE_HANDLERS handlers = {
+            NULL,
+            (int(*)(void *, GUI_MSG *msg))_OnKey,
+    };
+    MAIN_GUI *main_gui = malloc(sizeof(MAIN_GUI));
+    zeromem(main_gui, sizeof(MAIN_GUI));
+    Sie_GUI_InitCanvas(&canvas);
+    main_gui->gui.canvas = (RECT*)(&canvas);
+    main_gui->gui.methods = (void*)gui_methods;
+    main_gui->gui.item_ll.data_mfree = (void (*)(void *))mfree_adr();
     csm->csm.state = 0;
     csm->csm.unk1 = 0;
-    int f;
-    int sz = 0;
-    unsigned int ul;
-    if ((f = _open(CFG_CSMLIST_PATH, A_ReadOnly + A_BIN, P_READ, &ul)) != -1) {
-        sz = _read(f, CSM_TEXT, 32767, &ul);
-        _close(f, &ul);
-    }
-    if (sz >= 0) CSM_TEXT[sz] = 0;
-    patch_header(&mm_menuhdr);
-    GetNumberOfDialogs();
-    if (REALD_COUNT > 1) {
-        csm->gui_id = CreateMenu(0, 0, &mm_menu, &mm_menuhdr, 1, REALD_COUNT, csm,
-                                 0);    // if more than 1 dialog, position of cursor in menu will be 1
-    }
-    else {
-        csm->gui_id = CreateMenu(0, 0, &mm_menu, &mm_menuhdr, 0, REALD_COUNT, csm, 0);    // else - 0
-    }
+    csm->main_gui = main_gui;
+    csm->main_gui->surface = Sie_GUI_Surface_Init(SIE_GUI_SURFACE_TYPE_DEFAULT, &handlers,
+                                                  CreateGUI(main_gui));
+    csm->gui_id = (int)(csm->main_gui->surface->gui_id);
+    LoadCSMList();
 }
 
 int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
-    MAIN_CSM *csm = (MAIN_CSM *)data;
+    MAIN_CSM *csm = (MAIN_CSM*)data;
     if (msg->msg == MSG_CSM_DESTROYED) {
-        RefreshGUI();
+        RefreshMenu(csm->main_gui);
+        DirectRedrawGUI_ID((int)(csm->gui_id));
     }
     if (msg->msg == MSG_GUI_DESTROYED) {
         if ((int)msg->data0 == csm->gui_id) {
@@ -566,7 +469,7 @@ int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     if (msg->msg == MSG_INCOMMING_CALL) {
         csm->csm.state = -3;
     }
-    return (1);
+    return 1;
 }
 
 void maincsm_onclose(CSM_RAM *csm) {
