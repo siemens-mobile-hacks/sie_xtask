@@ -1,6 +1,7 @@
 #include <swilib.h>
 #include <stdlib.h>
 #include <xtask_ipc.h>
+#include <sie/sie.h>
 #include "swaper.h"
 #include "keyhook.h"
 #include "idle_csm_hook.h"
@@ -20,6 +21,7 @@ extern int CFG_ACTIVE_KEY_STYLE;
 extern char CFG_UNDER_IDLE_CONSTR[];
 
 extern CSM_DESC old_idle_csmd;
+extern onmessage_t old_idle_onmessage;
 
 extern int SHOW_DAEMONS;
 extern const char *CONFIG_PATH;
@@ -77,10 +79,10 @@ int csm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     }
     else {
         L1:
-        csm_result = old_onMessage(data, msg);
+        csm_result = old_idle_onmessage(data, msg);
     }
 #else
-    csm_result = old_idle_csmd.onMessage(data, msg); //Вызываем старый обработчик событий
+    csm_result = old_idle_onmessage(data, msg); //Вызываем старый обработчик событий
 #endif
 
     icgui_id = ((int*)data)[DISPLACE_OF_INCOMMINGGUI / 4];
@@ -88,7 +90,7 @@ int csm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     if (!icgui_id) CALLHIDE_MODE = 0;
     if (msg->msg == MSG_RECONFIGURE_REQ) {
         if (strcmpi(CONFIG_PATH, (char *)msg->data0) == 0) {
-            ShowMSG(1, (int)"XTask config updated!");
+            Sie_GUI_MsgBox("SieTask config updated!", NULL);
             InitConfig();
         }
     } else
@@ -144,11 +146,11 @@ void DoSplices(void) {
     SHOW_DAEMONS = CFG_SHOW_DAEMONS;
     LockSched();
     if (!AddKeybMsgHook_end((void*)KeyHook)) {
-        ShowMSG(1, (int)"Невозможно зарегистрировать обработчик!");
+        Sie_GUI_MsgBox("Couldn't add keyhook!", NULL);
         SUBPROC(kill_elf);
     } else {
         if (CFG_ENA_HELLO_MSG) {
-            ShowMSG(1, (int)"XTask3 установлен!");
+            Sie_GUI_MsgBox("SieTask has been installed!", NULL);
         }
         AddIdleCSMHook();
         CSM_UNDER_IDLE = GetUnderIdleCSM(); //Ищем idle_dialog

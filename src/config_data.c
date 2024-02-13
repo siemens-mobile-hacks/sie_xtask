@@ -39,7 +39,7 @@ __root CFG_HDR cfghdr5 = {CFG_CBOX, "Extra: on longpress", 0, 5};
 __root int CFG_ENA_LONG_PRESS = 2;
 __root CFG_CBOX_ITEM cfgcbox5_1[5] = {
         {"As in FW"}, {"Do nothing"},
-        {"Hide all tasks"}, {"Launch XTask"}, {"Hide & Lock"},
+        {"Hide all tasks"}, {"Launch SieTask"}, {"Hide & Lock"},
 };
 
 #ifdef NEWSGOLD

@@ -15,8 +15,6 @@ extern RECT canvas;
 extern int MAIN_CSM_ID;
 
 void Exit() {
-    void csm_onclose(CSM_RAM *data);
-
     LockSched();
     CloseCSM(MAIN_CSM_ID);
     RemoveIdleCSMHook();
