@@ -43,16 +43,9 @@ typedef struct {
 } JAVAINTERFACE_CSM;
 #endif
 
-extern char CFG_BM1FILE[128];
-extern char CFG_BM2FILE[128];
-extern char CFG_BM3FILE[128];
-extern char CFG_BM4FILE[128];
-extern char CFG_BM5FILE[128];
-extern char CFG_BM6FILE[128];
-extern char CFG_BM7FILE[128];
-extern char CFG_BM8FILE[128];
-extern char CFG_BM9FILE[128];
 extern int CFG_SHOW_IDLESCREEN;
+extern char CFG_BM1[128], CFG_BM2[128], CFG_BM3[128], CFG_BM4[128];
+extern char CFG_BM5[128], CFG_BM6[128], CFG_BM7[128], CFG_BM8[128], CFG_BM9[128];
 
 extern char *CONFIG_PATH;
 extern CSM_RAM *CSM_UNDER_IDLE;
@@ -334,23 +327,23 @@ static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
 const char *GetExec(int id) {
     switch (id) {
         case 0:
-            return CFG_BM1FILE;
+            return CFG_BM1;
         case 1:
-            return CFG_BM2FILE;
+            return CFG_BM2;
         case 2:
-            return CFG_BM3FILE;
+            return CFG_BM3;
         case 3:
-            return CFG_BM4FILE;
+            return CFG_BM4;
         case 4:
-            return CFG_BM5FILE;
+            return CFG_BM5;
         case 5:
-            return CFG_BM6FILE;
+            return CFG_BM6;
         case 6:
-            return CFG_BM7FILE;
+            return CFG_BM7;
         case 7:
-            return CFG_BM8FILE;
+            return CFG_BM8;
         case 8:
-            return CFG_BM9FILE;
+            return CFG_BM9;
     }
     return NULL;
 }

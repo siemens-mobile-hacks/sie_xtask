@@ -64,47 +64,47 @@ __root CFG_CBOX_ITEM cfgcbox9_1[2]={{"No"}, {"Yes"}};
 
 __root CFG_HDR cfghdr10 = {CFG_STR_WIN1251, "Bookmark 1 name", 1, 31};
 __root char CFG_BM1NAME[32] = "";
-__root CFG_HDR cfghdr11 = {CFG_STR_UTF8, "Bookmark 1 file", 3, 127};
-__root char CFG_BM1FILE[128]="";
+__root CFG_HDR cfghdr11 = {CFG_STR_UTF8, "Bookmark 1", 3, 127};
+__root char CFG_BM1[128]="";
 
 __root CFG_HDR cfghdr12 = {CFG_STR_WIN1251, "Bookmark 2 name", 1, 31};
 __root char CFG_BM2NAME[32] = "";
-__root CFG_HDR cfghdr13 = {CFG_STR_UTF8, "Bookmark 2 file", 3, 127};
-__root char CFG_BM2FILE[128] = "";
+__root CFG_HDR cfghdr13 = {CFG_STR_UTF8, "Bookmark 2", 3, 127};
+__root char CFG_BM2[128] = "";
 
 __root CFG_HDR cfghdr14 = {CFG_STR_WIN1251, "Bookmark 3 name", 1, 31};
 __root char CFG_BM3NAME[32] = "";
-__root CFG_HDR cfghdr15 = {CFG_STR_UTF8, "Bookmark 3 file", 3, 127};
-__root char CFG_BM3FILE[128] = "";
+__root CFG_HDR cfghdr15 = {CFG_STR_UTF8, "Bookmark 3", 3, 127};
+__root char CFG_BM3[128] = "";
 
 __root CFG_HDR cfghdr16 = {CFG_STR_WIN1251, "Bookmark 4 name", 1, 31};
 __root char CFG_BM4NAME[32] = "";
-__root CFG_HDR cfghdr17 = {CFG_STR_UTF8, "Bookmark 4 file", 3, 127};
-__root char CFG_BM4FILE[128] = "";
+__root CFG_HDR cfghdr17 = {CFG_STR_UTF8, "Bookmark 4", 3, 127};
+__root char CFG_BM4[128] = "";
 
 __root CFG_HDR cfghdr18 = {CFG_STR_WIN1251, "Bookmark 5 name", 1, 31};
 __root char CFG_BM5NAME[32] = "";
-__root CFG_HDR cfghdr19 = {CFG_STR_UTF8, "Bookmark 5 file", 3, 127};
-__root char CFG_BM5FILE[128] = "";
+__root CFG_HDR cfghdr19 = {CFG_STR_UTF8, "Bookmark 5", 3, 127};
+__root char CFG_BM5[128] = "";
 
 __root CFG_HDR cfghdr20 = {CFG_STR_WIN1251, "Bookmark 6 name", 1, 31};
 __root char CFG_BM6NAME[32] = "";
-__root CFG_HDR cfghdr21 = {CFG_STR_UTF8, "Bookmark 6 file", 3, 127};
-__root char CFG_BM6FILE[128] = "";
+__root CFG_HDR cfghdr21 = {CFG_STR_UTF8, "Bookmark 6", 3, 127};
+__root char CFG_BM6[128] = "";
 
 __root CFG_HDR cfghdr22 = {CFG_STR_WIN1251, "Bookmark 7 name", 1, 31};
 __root char CFG_BM7NAME[32] = "";
-__root CFG_HDR cfghdr23 = {CFG_STR_UTF8, "Bookmark 7 file", 3, 127};
-__root char CFG_BM7FILE[128] = "";
+__root CFG_HDR cfghdr23 = {CFG_STR_UTF8, "Bookmark 7", 3, 127};
+__root char CFG_BM7[128] = "";
 
 __root CFG_HDR cfghdr24 = {CFG_STR_WIN1251, "Bookmark 8 name", 1, 31};
 __root char CFG_BM8NAME[32] = "";
-__root CFG_HDR cfghdr25 = {CFG_STR_UTF8, "Bookmark 8 file", 3, 127};
-__root char CFG_BM8FILE[128] = "";
+__root CFG_HDR cfghdr25 = {CFG_STR_UTF8, "Bookmark 8", 3, 127};
+__root char CFG_BM8[128] = "";
 
 __root CFG_HDR cfghdr26 = {CFG_STR_WIN1251, "Bookmark 9 name", 1, 31};
 __root char CFG_BM9NAME[32] = "";
-__root CFG_HDR cfghdr27 = {CFG_STR_UTF8, "Bookmark 9 file", 3, 127};
-__root char CFG_BM9FILE[128] = "";
+__root CFG_HDR cfghdr27 = {CFG_STR_UTF8, "Bookmark 9", 3, 127};
+__root char CFG_BM9[128] = "";
 
 __CFG_END(0)
