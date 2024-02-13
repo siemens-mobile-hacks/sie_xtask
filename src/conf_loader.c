@@ -3,7 +3,7 @@
 #include <cfg_items.h>
 #include "conf_loader.h"
 
-char *successed_config_filename = "";
+char *CONFIG_PATH = "";
 
 size_t GetConfigSize(CFG_HDR *cfghdr0, int *__config_begin, int *__config_end) {
     volatile unsigned int _segb = (volatile unsigned int)__config_begin;
@@ -54,7 +54,7 @@ int LoadConfigData(const char *path, CFG_HDR *cfghdr0, int *__config_begin, int 
         mfree(buf);
     }
     if (result > 0) {
-        successed_config_filename = (char*)path;
+        CONFIG_PATH = (char*)path;
     }
     return result;
 }
