@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <sie/sie.h>
 #include "conf_loader.h"
-#include "rect_patcher.h"
 #include "swaper.h"
 
 typedef struct {
