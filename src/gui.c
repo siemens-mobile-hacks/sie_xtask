@@ -1,8 +1,9 @@
 #include <swilib.h>
 #include <stdlib.h>
 #include <sie/sie.h>
-#include "conf_loader.h"
+#include "menu.h"
 #include "swaper.h"
+#include "conf_loader.h"
 
 typedef struct {
     GUI gui;
@@ -54,7 +55,7 @@ RECT canvas;
 const CSM_DESC maincsm;
 const int minus11 = -11;
 
-int CSM_ID;
+int MAIN_CSM_ID;
 int SHOW_DAEMONS;
 char CSM_TEXT[32768];
 char MMENU_HDR_TEXT[32];
@@ -367,8 +368,8 @@ static int _OnKey(MAIN_GUI *data, GUI_MSG *msg) {
                 }
                 return 1;
             case LEFT_SOFT:
-                CSMtoTop(CSM_root()->idle_id, -1);
-                return 1;
+                CreateMenuOptions();
+                return 0;
             case RIGHT_SOFT:
                 return 1;
             case '*':
@@ -466,7 +467,7 @@ int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
 
 void maincsm_onclose(CSM_RAM *csm) {
     ClearNL();
-    CSM_ID = 0;
+    MAIN_CSM_ID = 0;
 }
 
 const CSM_DESC maincsm = {
@@ -485,10 +486,10 @@ sizeof(MAIN_CSM),
 };
 
 
-void ShowMenu(void) {
+void CreateMainGUI(void) {
     MAIN_CSM main_csm;
     InitConfig();
-    if (!CSM_ID) {
-        CSM_ID = CreateCSM(&maincsm, &main_csm, 2);
+    if (!MAIN_CSM_ID) {
+        MAIN_CSM_ID = CreateCSM(&maincsm, &main_csm, 2);
     }
 }

@@ -1,6 +1,6 @@
-#ifndef GUI_H_
-#define GUI_H_
+#ifndef __GUI_H_
+#define __GUI_H_
 
-void ShowMenu();
+void CreateMainGUI();
 
 #endif

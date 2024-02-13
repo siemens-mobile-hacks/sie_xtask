@@ -3,6 +3,7 @@
 #include <xtask_ipc.h>
 #include "swaper.h"
 #include "keyhook.h"
+#include "idle_csm_hook.h"
 #include "conf_loader.h"
 
 #ifdef NEWSGOLD
@@ -11,18 +12,17 @@
 
 #define TMR_SECOND(A) (1300L*A/6)
 
-extern int CSM_ID;
+extern int MAIN_CSM_ID;
 extern int CFG_ACTIVE_KEY;
 extern int CFG_SHOW_DAEMONS;
+extern int CFG_ENA_HELLO_MSG;
 extern int CFG_ACTIVE_KEY_STYLE;
 extern char CFG_UNDER_IDLE_CONSTR[];
 
+extern CSM_DESC old_idle_csmd;
+
 extern int SHOW_DAEMONS;
 extern const char *CONFIG_PATH;
-
-CSM_DESC icsmd;
-int (*old_onMessage)(CSM_RAM *, GBS_MSG *);
-void (*old_onClose)(CSM_RAM *);
 
 GBSTMR TMR_START;
 CSM_RAM *CSM_UNDER_IDLE;
@@ -48,7 +48,7 @@ CSM_RAM *GetUnderIdleCSM(void) {
 }
 
 
-int MyIDLECSM_onMessage(CSM_RAM *data, GBS_MSG *msg) {
+int csm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     int csm_result;
     int icgui_id;
     int idlegui_id;
@@ -80,7 +80,7 @@ int MyIDLECSM_onMessage(CSM_RAM *data, GBS_MSG *msg) {
         csm_result = old_onMessage(data, msg);
     }
 #else
-    csm_result = old_onMessage(data, msg); //Вызываем старый обработчик событий
+    csm_result = old_idle_csmd.onMessage(data, msg); //Вызываем старый обработчик событий
 #endif
 
     icgui_id = ((int*)data)[DISPLACE_OF_INCOMMINGGUI / 4];
@@ -100,7 +100,7 @@ int MyIDLECSM_onMessage(CSM_RAM *data, GBS_MSG *msg) {
                 if (strcmp(ipc->name_to, IPC_NAME) == 0) {
                     switch (msg->submess) {
                         case IPC_XTASK_SHOW_CSM:
-                            if (CSM_ID) break;
+                            if (MAIN_CSM_ID) break;
                             if ((!IsCalling()) && (!SHOW_LOCK)) {
                                 if ((CSM_root()->csm_q->csm.last != data) || IsGuiOnTop(idlegui_id)) {
                                     CSMtoTop((int)(ipc->data), -1);
@@ -108,7 +108,7 @@ int MyIDLECSM_onMessage(CSM_RAM *data, GBS_MSG *msg) {
                             }
                             break;
                         case IPC_XTASK_IDLE:
-                            if (CSM_ID) break;
+                            if (MAIN_CSM_ID) break;
                             if ((!IsCalling())/*&&(!SHOW_LOCK)*/)
                                 CSMtoTop(CSM_root()->idle_id, -1);
                             break;
@@ -134,9 +134,9 @@ int MyIDLECSM_onMessage(CSM_RAM *data, GBS_MSG *msg) {
     return csm_result;
 }
 
-void MyIDLECSM_onClose(CSM_RAM *data) {
+void csm_onclose(CSM_RAM *data) {
     GBS_DelTimer(&TMR_START);
-    RemoveKeybMsgHook((void*)KeyHook);
+    RemoveKeybMsgHook((void *)KeyHook);
     kill_elf();
 }
 
@@ -145,21 +145,12 @@ void DoSplices(void) {
     LockSched();
     if (!AddKeybMsgHook_end((void*)KeyHook)) {
         ShowMSG(1, (int)"Невозможно зарегистрировать обработчик!");
-        SUBPROC((void*)kill_elf);
+        SUBPROC(kill_elf);
     } else {
-        extern const int CFG_ENA_HELLO_MSG;
         if (CFG_ENA_HELLO_MSG) {
             ShowMSG(1, (int)"XTask3 установлен!");
         }
-        {
-            CSM_RAM *icsm = FindCSMbyID(CSM_root()->idle_id);
-            memcpy(&icsmd, icsm->constr, sizeof(icsmd));
-            old_onClose = icsmd.onClose;
-            old_onMessage = icsmd.onMessage;
-            icsmd.onClose = MyIDLECSM_onClose;
-            icsmd.onMessage = MyIDLECSM_onMessage;
-            icsm->constr = &icsmd;
-        }
+        AddIdleCSMHook();
         CSM_UNDER_IDLE = GetUnderIdleCSM(); //Ищем idle_dialog
     }
     UnlockSched();

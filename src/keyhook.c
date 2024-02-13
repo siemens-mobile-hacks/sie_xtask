@@ -2,7 +2,7 @@
 #include "gui.h"
 #include "swaper.h"
 
-extern int CSM_ID;
+extern int MAIN_CSM_ID;
 extern int CFG_ENA_LOCK;
 extern int CFG_ACTIVE_KEY;
 extern int CFG_RED_BUT_MODE;
@@ -43,7 +43,7 @@ int KeyHook(int submsg, int msg) {
                     if (CFG_RED_BUT_MODE == 1) {
                         GBS_SendMessage(MMI_CEPID, KEY_DOWN, RIGHT_SOFT);
                     } else {
-                        if (!CSM_ID) {
+                        if (!MAIN_CSM_ID) {
                             CSMtoTop(CSM_root()->idle_id, -1);
                         }
                     }
@@ -82,14 +82,14 @@ int KeyHook(int submsg, int msg) {
             case LONG_PRESS:
                 mode_enter = 1;
                 if (IsUnlocked() || CFG_ENA_LOCK) {
-                    ShowMenu();
+                    CreateMainGUI();
                 }
                 mode = 0;
                 return KEYHOOK_BREAK;
         }
     }
     // * + # implementation
-    if ((CFG_ACTIVE_KEY_STYLE == 2) && !(CSM_ID)) {
+    if ((CFG_ACTIVE_KEY_STYLE == 2) && !(MAIN_CSM_ID)) {
         if (msg == KEY_UP) {
             mode = 0;
             return KEYHOOK_NEXT;
@@ -102,7 +102,7 @@ int KeyHook(int submsg, int msg) {
                 case '#':
                     if (mode == 1) {
                         if (IsUnlocked() || CFG_ENA_LOCK)
-                            ShowMenu();
+                            CreateMainGUI();
                         else mode = 0;
                     } else return KEYHOOK_NEXT;
             }
@@ -110,7 +110,7 @@ int KeyHook(int submsg, int msg) {
     }
     if (CFG_ACTIVE_KEY_STYLE < 2) {
         if (submsg != CFG_ACTIVE_KEY) return KEYHOOK_NEXT;
-        if (CSM_ID) {
+        if (MAIN_CSM_ID) {
             if (msg == KEY_UP) {
                 GBS_SendMessage(MMI_CEPID, KEY_DOWN, ENTER_BUTTON);
             }
@@ -130,7 +130,7 @@ int KeyHook(int submsg, int msg) {
                     if ((CFG_ACTIVE_KEY_STYLE == 1) || (CFG_ENA_LONG_PRESS == 3)) {
                         //Launch on LongPress or Extra on LP - Launch
                         if (IsUnlocked() || CFG_ENA_LOCK) {
-                            ShowMenu();
+                            CreateMainGUI();
                         }
                         return KEYHOOK_BREAK;
                     }
@@ -148,7 +148,7 @@ int KeyHook(int submsg, int msg) {
                 }
                 if (CFG_ACTIVE_KEY_STYLE == 0) {
                     if (IsUnlocked() || CFG_ENA_LOCK) {
-                        ShowMenu();
+                        CreateMainGUI();
                     }
                     return KEYHOOK_BREAK;
                 }
