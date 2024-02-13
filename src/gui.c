@@ -289,7 +289,7 @@ SIE_MENU_LIST_ITEM *InitMenuItems(unsigned int *count) {
 }
 
 static void RefreshMenu(MAIN_GUI *data) {
-    unsigned int row = (data->menu) ? data->menu->row : 0;
+    unsigned int row = (data->menu) ? data->menu->row : 1;
     Sie_Menu_List_Destroy(data->menu);
     GetNumberOfDialogs();
     data->menu = Sie_Menu_List_Init(data->surface->gui_id);
@@ -359,7 +359,7 @@ static int _OnKey(MAIN_GUI *data, GUI_MSG *msg) {
         switch (msg->gbsmsg->submess) {
             case SIE_MENU_LIST_KEY_PREV:
             case SIE_MENU_LIST_KEY_NEXT:
-                Sie_GUI_Surface_Draw(data->surface);
+                Sie_Menu_List_Draw(data->menu);
                 break;
             case SIE_MENU_LIST_KEY_ENTER:
                 nl = GetNLItem((int)(data->menu->row));
