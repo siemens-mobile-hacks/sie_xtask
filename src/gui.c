@@ -241,7 +241,7 @@ int GetNumberOfDialogs(void) {
             }
         }
     } while ((icsm = icsm->next));
-    sprintf(MMENU_HDR_TEXT, "SieTask\t%d", count);
+    sprintf(MMENU_HDR_TEXT, "SieXTask\t%d", count);
     REALD_COUNT = count - NSD_COUNT;
     return count;
 }
