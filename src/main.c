@@ -1,5 +1,6 @@
 #include <swilib.h>
 #include <stdlib.h>
+#include <string.h>
 #include <xtask_ipc.h>
 #include <sie/sie.h>
 #include "swaper.h"

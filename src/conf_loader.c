@@ -1,6 +1,7 @@
 #include <swilib.h>
 #include <stdlib.h>
 #include <cfg_items.h>
+#include <string.h>
 #include "conf_loader.h"
 
 char *CONFIG_PATH = "";
