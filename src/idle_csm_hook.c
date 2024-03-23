@@ -1,4 +1,5 @@
 #include <swilib.h>
+#include <string.h>
 #include "idle_csm_hook.h"
 
 CSM_DESC *old_idle_csmd;
